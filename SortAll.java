@@ -17,7 +17,6 @@
 
 import java.util.Random;
 
-@SuppressWarnings("unchecked")
 public class SortAll {
   public static void main(String[] args) {
     String s[] = new String[300];
@@ -40,6 +39,7 @@ public class SortAll {
     }
   }
 
+  @SuppressWarnings("unchecked")
   public static <T> void bubbleSort(Comparable<T>[] arr) {
     for (int i = 0; i < arr.length; i++) {
       for (int j = i; j < arr.length; j++) {
