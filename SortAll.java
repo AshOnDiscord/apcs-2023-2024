@@ -40,11 +40,11 @@ public class SortAll {
   }
 
   @SuppressWarnings("unchecked")
-  public static <T> void bubbleSort(Comparable<T>[] arr) {
+  public static void bubbleSort(Comparable[] arr) {
     for (int i = 0; i < arr.length; i++) {
       for (int j = i; j < arr.length; j++) {
-        if (arr[i].compareTo((T) arr[j]) > 0) {
-          Comparable<T> temp = arr[i];
+        if (arr[i].compareTo(arr[j]) > 0) {
+          Comparable temp = arr[i];
           arr[i] = arr[j];
           arr[j] = temp;
         }
