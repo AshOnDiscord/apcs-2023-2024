@@ -47,17 +47,17 @@ public class UseBase {
   public static void main(String[] args) {
     Decimal d = new Decimal(10);
     System.out.println(d);
-    System.out.println(decimalToBinary(d));
     System.out.println(decimalToHex(d));
+    System.out.println(decimalToBinary(d));
     System.out.println();
     Binary b = new Binary("1010");
-    System.out.println(b);
     System.out.println(binaryToDecimal(b));
     System.out.println(binaryToHex(b));
+    System.out.println(b);
     System.out.println();
     Hex h = new Hex("A");
-    System.out.println(h);
     System.out.println(hexToDecimal(h));
+    System.out.println(h);
     System.out.println(hexToBinary(h));
   
   }
