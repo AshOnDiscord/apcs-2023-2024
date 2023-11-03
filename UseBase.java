@@ -44,21 +44,121 @@ public class UseBase {
   public static Binary hexToBinary(Hex hex) {
     return decimalToBinary(hexToDecimal(hex));
   }
+  
+  // Addition
+  public static Decimal add(Decimal decimal1, Decimal decimal2) {
+    double result = decimal1.getValue() + decimal2.getValue();
+    return new Decimal(result);
+  }
+
+  public static Binary add(Binary binary1, Binary binary2) {
+    // Convert binary to decimal, perform addition, and then convert back to binary
+    Decimal decimal1 = binaryToDecimal(binary1);
+    Decimal decimal2 = binaryToDecimal(binary2);
+    Decimal sumDecimal = add(decimal1, decimal2);
+    return decimalToBinary(sumDecimal);
+  }
+
+  public static Hex add(Hex hex1, Hex hex2) {
+      // Convert hexadecimal to decimal, perform addition, and then convert back to hexadecimal
+      Decimal decimal1 = hexToDecimal(hex1);
+      Decimal decimal2 = hexToDecimal(hex2);
+      Decimal sumDecimal = add(decimal1, decimal2);
+      return decimalToHex(sumDecimal);
+  }
+
+  // Subtraction 
+  public static Decimal subtract(Decimal decimal1, Decimal decimal2) {
+    double result = decimal1.getValue() - decimal2.getValue();
+    return new Decimal(result);
+  }
+
+  public static Binary subtract(Binary binary1, Binary binary2) {
+    // Convert binary to decimal, perform addition, and then convert back to binary
+    Decimal decimal1 = binaryToDecimal(binary1);
+    Decimal decimal2 = binaryToDecimal(binary2);
+    Decimal sumDecimal = subtract(decimal1, decimal2);
+    return decimalToBinary(sumDecimal);
+  }
+
+  public static Hex subtract(Hex hex1, Hex hex2) {
+      // Convert hexadecimal to decimal, perform addition, and then convert back to hexadecimal
+      Decimal decimal1 = hexToDecimal(hex1);
+      Decimal decimal2 = hexToDecimal(hex2);
+      Decimal sumDecimal = subtract(decimal1, decimal2);
+      return decimalToHex(sumDecimal);
+
+  // Multiplication
+  public static Decimal multiply(Decimal decimal1, Decimal decimal2) {
+      double result = decimal1.getValue() * decimal2.getValue();
+      return new Decimal(result);
+  }
+
+  public static Binary multiply(Binary binary1, Binary binary2) {
+      Decimal decimal1 = binaryToDecimal(binary1);
+      Decimal decimal2 = binaryToDecimal(binary2);
+      Decimal productDecimal = multiply(decimal1, decimal2);
+      return decimalToBinary(productDecimal);
+  }
+
+  public static Hex multiply(Hex hex1, Hex hex2) {
+      Decimal decimal1 = hexToDecimal(hex1);
+      Decimal decimal2 = hexToDecimal(hex2);
+      Decimal productDecimal = multiply(decimal1, decimal2);
+      return decimalToHex(productDecimal);
+  }
+
+  // Division
+  public static Decimal divide(Decimal dividend, Decimal divisor) {
+      if (divisor.getValue() == 0.0) {
+          // Handle division by zero
+          throw new ArithmeticException("Division by zero");
+      }
+      double result = dividend.getValue() / divisor.getValue();
+      return new Decimal(result);
+  }
+
+  public static Binary divide(Binary dividend, Binary divisor) {
+      Decimal decimalDividend = binaryToDecimal(dividend);
+      Decimal decimalDivisor = binaryToDecimal(divisor);
+      Decimal quotientDecimal = divide(decimalDividend, decimalDivisor);
+      return decimalToBinary(quotientDecimal);
+  }
+
+  public static Hex divide(Hex dividend, Hex divisor) {
+      Decimal decimalDividend = hexToDecimal(dividend);
+      Decimal decimalDivisor = hexToDecimal(divisor);
+      Decimal quotientDecimal = divide(decimalDividend, decimalDivisor);
+      return decimalToHex(quotientDecimal);
+  }
+
+  
   public static void main(String[] args) {
-    Decimal d = new Decimal(10);
-    System.out.println(d);
-    System.out.println(decimalToHex(d));
-    System.out.println(decimalToBinary(d));
-    System.out.println();
-    Binary b = new Binary("1010");
-    System.out.println(binaryToDecimal(b));
-    System.out.println(binaryToHex(b));
-    System.out.println(b);
-    System.out.println();
-    Hex h = new Hex("A");
-    System.out.println(hexToDecimal(h));
-    System.out.println(h);
-    System.out.println(hexToBinary(h));
+    Scanner scanner = new Scanner(System.in);
+    System.out.print("Enter the first number (in base 10): ");
+    double num1 = scanner.nextDouble();
+    Decimal decimal1 = new Decimal(num1);
+
+    System.out.print("Enter the second number (in base 10): ");
+    double num2 = scanner.nextDouble();
+    Decimal decimal2 = new Decimal(num2);
+
+    // Addition
+    Decimal sumDecimal = add(decimal1, decimal2);
+    System.out.println("Addition (Decimal): " + sumDecimal);
+
+    // Multiplication
+    Binary productBinary = multiply(decimalToBinary(decimal1), decimalToBinary(decimal2));
+    System.out.println("Multiplication (Binary): " + productBinary);
+
+    // Division
+    try {
+        Hex quotientHex = divide(decimalToHex(decimal1), decimalToHex(decimal2));
+        System.out.println("Division (Hex): " + quotientHex);
+    } catch (ArithmeticException e) {
+        System.out.println("Division by zero is not allowed.");
+    }
+    scanner.close();
   
   }
 }
