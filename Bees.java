@@ -22,10 +22,10 @@ public class Bees {
             throw new RuntimeException(e);
         }
         String[] lines = data.split("\n");
-        Point size = new Point(0,0,0, false);
+        Point size = new Point(0, 0, 0, false);
         Point[] end = new Point[15];
         Point[] bees = new Point[15];
-        List<String> walls = new ArrayList<>();
+        Set<String> walls = new HashSet<>();
         for (int i = 0; i < lines.length; i++) {
 //            System.out.printf("%d | %s", i, lines[i]);
             if (i == 0) continue; // cycle number;
@@ -51,7 +51,7 @@ public class Bees {
         for (int x = 0; x < grid.length; x++) {
             for (int y = 0; y < grid.length; y++) {
                 for (int z = 0; z < grid.length; z++) {
-                    String key = String.format("%s,%s,%s", x, y, z);
+                    String key = x + "," + y + "," + z;
                     grid[x][y][z] = new Point(x, y, z, false);
                     if (walls.contains(key)) {
                         grid[x][y][z].isWall = true;
@@ -93,16 +93,44 @@ class Point {
 
     @Override
     public String toString() {
-        return String.format("(%d, %d, %d)", x, y, z);
+        return "(" + x + "," + y + "," + z + ")";
     }
 }
 
 class PointNode extends Point {
-    double heuristic;
+    public float heuristic;
 
-    PointNode(int x, int y, int z, double heuristic) {
+    PointNode(int x, int y, int z, float heuristic) {
         super(x, y, z, false);
         this.heuristic = heuristic;
+    }
+
+    public PointNode(String node) {
+        super(0, 0, 0, false);
+
+        String[] parts = node.split("\\|");
+        String[] coordinates = parts[0].split(",");
+
+        int x = Integer.parseInt(coordinates[0]);
+        int y = Integer.parseInt(coordinates[1]);
+        int z = Integer.parseInt(coordinates[2]);
+
+        this.x = x;
+        this.y = y;
+        this.z = z;
+
+//        this.heuristic = Double.parseDouble(parts[1]);
+        this.heuristic = Float.parseFloat(parts[1]);
+    }
+
+
+    public String toPointString() {
+        return super.toString();
+    }
+
+    @Override
+    public String toString() {
+        return x + "," + y + "," + z + "|" + heuristic;
     }
 }
 
@@ -121,23 +149,33 @@ class AStar {
     public HashMap<String, PointDistance> minDistances = new HashMap<>();
 
     public double getWeight(PointNode node) {
-        if (minDistances.containsKey(node.toString())) {
-            return minDistances.get(node.toString()).cost + node.heuristic / 2.0;
+        if (minDistances.containsKey(node.toPointString())) {
+            return minDistances.get(node.toPointString()).cost + node.heuristic / 2.0;
 //            return node.heuristic;
 //            return minDistances.get(node.toString()).cost;
         }
         return Double.POSITIVE_INFINITY;
     }
 
-    public double getHeuristic(Point node, Point[] end) {
-        // euclidean distance
-        double min = Double.POSITIVE_INFINITY;
-        for (Point endPoint : end) {
-            double distance = Math.sqrt(Math.pow(node.x - endPoint.x, 2) + Math.pow(node.y - endPoint.y, 2) + Math.pow(node.z - endPoint.z, 2));
-            if (distance < min) min = distance;
-        }
-        return min;
+    public double getWeight(String node) {
+        return getWeight(new PointNode(node));
     }
+    public float getHeuristic(Point node, Point[] end) {
+        double minSquaredDistance = Double.POSITIVE_INFINITY;
+
+        for (Point endPoint : end) {
+            double squaredDistance = Math.pow(node.x - endPoint.x, 2) +
+                    Math.pow(node.y - endPoint.y, 2) +
+                    Math.pow(node.z - endPoint.z, 2);
+
+            if (squaredDistance < minSquaredDistance) {
+                minSquaredDistance = squaredDistance;
+            }
+        }
+
+        return (float) Math.sqrt(minSquaredDistance);
+    }
+
 
     public List<Point> getNeighbors(PointNode node, Point[][][] grid) {
         List<Point> neighbors = new ArrayList<>();
@@ -166,7 +204,7 @@ class AStar {
                             break; // we can't move through walls
                         }
                         // if we're moving diagonally, we can't move through corners
-                        if (x != 0 && (y != 0 || z!= 0)) {
+                        if (x != 0 && (y != 0 || z != 0)) {
                             // we are moving diagonally w/ x movement
                             // check if we moved through a block
                             if (grid[newX - x][newY][newZ] != null && grid[newX - x][newY][newZ].isWall) {
@@ -174,7 +212,7 @@ class AStar {
                             }
                         }
                         // check y movement
-                        if (y != 0 && (x != 0 || z!= 0)) {
+                        if (y != 0 && (x != 0 || z != 0)) {
                             // we are moving diagonally w/ y movement
                             // check if we moved through a block
                             if (grid[newX][newY - y][newZ] != null && grid[newX][newY - y][newZ].isWall) {
@@ -182,7 +220,7 @@ class AStar {
                             }
                         }
                         // check z movement
-                        if (z != 0 && (x != 0 || y!= 0)) {
+                        if (z != 0 && (x != 0 || y != 0)) {
                             // we are moving diagonally w/ z movement
                             // check if we moved through a block
                             if (grid[newX][newY][newZ - z] != null && grid[newX][newY][newZ - z].isWall) {
@@ -211,40 +249,46 @@ class AStar {
             }
         }
 
-//        PriorityQueue<PointNode> unseenNodes = new PriorityQueue<>((b, a) -> (int) (this.getWeight(a) - this.getWeight(b)));
-        ArrayList<PointNode> unseenNodes = new ArrayList<>();
-        for (Point node : nodes) {
-            unseenNodes.add(new PointNode(node.x, node.y, node.z, getHeuristic(node, end)));
-        }
+        PriorityQueue<String> unseenNodes = new PriorityQueue<>((a, b) -> Double.compare(this.getWeight(a), this.getWeight(b)));
         minDistances = new HashMap<>(); // reset
         minDistances.put(start.toString(), new PointDistance(start.x, start.y, start.z, 0, null));
 
+        nodes.forEach(node -> unseenNodes.add(new PointNode(node.x, node.y, node.z, getHeuristic(node, end)).toString()));
+
+        PointDistance min = null;
+
         while (!unseenNodes.isEmpty()) {
-//            PointNode current = unseenNodes.remove();
+            PointNode current = new PointNode(unseenNodes.remove());
 //            unseenNodes.sort((a, b) -> Double.compare(a.heuristic, b.heuristic));
-            unseenNodes.sort((a, b) -> Double.compare(this.getWeight(a), this.getWeight(b)));
-            PointNode current = unseenNodes.remove(0);
-            if (reachedEnd.contains(current.toString())) {
-                reachedEnd.remove(current.toString());
+//            unseenNodes.sort((a, b) -> Double.compare(this.getWeight(a), this.getWeight(b)));
+//            PointNode current = unseenNodes.remove(0);
+            if (reachedEnd.contains(current.toPointString())) {
+                reachedEnd.remove(current.toPointString());
                 // check if all endpoints reached
-                if (reachedEnd.isEmpty()) break;
+//                if (reachedEnd.isEmpty()) break;
+
+                // break either way since pulled with be minimum
+                min = minDistances.get(current.toPointString());
+                break;
             }
             List<Point> neighbors = getNeighbors(current, grid);
-            double distance = minDistances.get(current.toString()).cost + 1;
+            double distance = minDistances.get(current.toPointString()).cost + 1;
             for (Point neighbor : neighbors) {
                 if (!minDistances.containsKey(neighbor.toString()) || distance < minDistances.get(neighbor.toString()).cost) {
-                    minDistances.put(neighbor.toString(), new PointDistance(neighbor.x, neighbor.y, neighbor.z, distance, minDistances.get(current.toString())));
+                    minDistances.put(neighbor.toString(), new PointDistance(neighbor.x, neighbor.y, neighbor.z, distance, minDistances.get(current.toPointString())));
+                    unseenNodes.remove(new PointNode(neighbor.x, neighbor.y, neighbor.z, getHeuristic(neighbor, end)).toString());
+                    unseenNodes.add(new PointNode(neighbor.x, neighbor.y, neighbor.z, getHeuristic(neighbor, end)).toString());
                 }
             }
         }
         // get the closest end point
-        PointDistance min = minDistances.get(end[0].toString());
-        for (Point endPoint: end) {
-            PointDistance temp = minDistances.get(endPoint.toString());
-            if (temp.cost < min.cost) {
-                min = temp;
-            }
-        }
+//        PointDistance min = minDistances.get(end[0].toString());
+//        for (Point endPoint: end) {
+//            PointDistance temp = minDistances.get(endPoint.toString());
+//            if (temp.cost < min.cost) {
+//                min = temp;
+//            }
+//        }
         // reconstruct path
         PointDistance current = min;
         List<Point> path = new ArrayList<>();
